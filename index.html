@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notícias Atuais</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-bottom: 20px;
+        }
+        .header {
+            background-color: black;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .card-img-top {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .card-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+        /* Adicionando estilos responsivos para telas maiores */
+        @media (min-width: 768px) {
+            .card-columns {
+                column-count: 2;
+            }
+        }
+        @media (min-width: 992px) {
+            .card-columns {
+                column-count: 3;
+            }
+        }
+        @media (min-width: 1200px) {
+            .card-columns {
+                column-count: 4;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Notícias Atuais</h1>
+    </div>
+
+    <div id="news-container" class="container card-columns">
+        <!-- Os cards de notícias serão inseridos aqui -->
+    </div>
+
+    <script>
+function createCard(news) {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    let imageUrl = news.urlToImage || news.image_url || news.image;
+    // Verifica se a URL da imagem é acessível, caso contrário, usa um placeholder
+    if (!imageUrl || imageUrl.includes('errors.edgesuite.net')) {
+        imageUrl = 'https://via.placeholder.com/150';
+    }
+    card.innerHTML = `
+        <img src="${imageUrl}" class="card-img-top" alt="Imagem da notícia" onerror="this.onerror=null;this.src='https://via.placeholder.com/150';">
+        <div class="card-body">
+            <h6 class="card-title">${news.title}</h6>
+            <p class="card-text"><small class="text-muted">Publicado em: ${new Date(news.publishedAt || news.published || news.pubDate).toLocaleString('pt-BR')}</small></p>
+            <a href="${news.url || news.link}" target="_blank" class="btn btn-primary">Ler notícia</a>
+        </div>
+    `;
+    return card;
+}
+
+        function fetchNews() {
+            const newsContainer = document.getElementById('news-container');
+            const currentsApiUrl = 'https://api.currentsapi.services/v1/latest-news?language=pt&apiKey=Fd7ulPKPjTqWCN01YpYZ-vEfZLTl8WQ1XkQEdlVQHivjiji7';
+            const newsDataApiUrl = 'https://newsdata.io/api/1/news?apikey=pub_24083303090369c3d75b30fbd770eebd12ce9&country=br&category=entertainment,top,environment,science,technology';
+            const newsApiUrl = 'https://newsapi.org/v2/top-headlines?country=br&category=entertainment,general,health,science,technology&apiKey=13ac1ea75e734b659f2dca3b3c0ecfcc';
+
+            Promise.all([
+        fetch(currentsApiUrl).then(response => response.ok ? response.json() : { news: [] }),
+        fetch(newsDataApiUrl).then(response => response.ok ? response.json() : { results: [] }),
+        fetch(newsApiUrl)
+            .then(response => {
+                if (response.status === 426) {
+                    console.error('Erro 426: Upgrade Required para a API NewsAPI.org');
+                    return { articles: [] }; // Retorna um array vazio para evitar interrupção no processamento
+                }
+                return response.ok ? response.json() : { articles: [] };
+            })
+    ]).then(([currentsData, newsData, newsApiData]) => {
+        let combinedNews = [
+            ...(currentsData.news || []),
+            ...(newsData.results || []),
+            ...(newsApiData.articles || [])
+        ];
+
+        // Ordenando as notícias pela data de publicação mais recente
+        combinedNews.sort((a, b) => {
+            let dateA = new Date(a.publishedAt || a.published || a.pubDate);
+            let dateB = new Date(b.publishedAt || b.published || b.pubDate);
+            return dateB - dateA; // Ordena do mais recente para o mais antigo
+        });
+
+        combinedNews.forEach(news => {
+            const card = createCard(news);
+            newsContainer.appendChild(card);
+        });
+    }).catch(error => console.error('Erro ao buscar notícias:', error));
+}
+
+fetchNews();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

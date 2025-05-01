@@ -1,0 +1,28 @@
+/* Estilos personalizados para os cards */
+.card {
+  border-radius: 20px;
+}
+
+.card-img-top {
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.card-text {
+  font-size: 0.9rem;
+}
+
+#prev-btn,
+#next-btn {
+  display: none;
+}
